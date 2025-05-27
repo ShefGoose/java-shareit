@@ -11,13 +11,14 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import ru.practicum.shareit.advice.exception.AccessDeniedException;
+import ru.practicum.shareit.advice.exception.EntityNotFoundException;
 import ru.practicum.shareit.advice.response.ApiError;
 import ru.practicum.shareit.advice.response.ValidationErrorResponse;
 import ru.practicum.shareit.advice.response.Violation;
 import ru.practicum.shareit.exception.DuplicateEmailException;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice(basePackages = {"ru.practicum.shareit.user.controller",
@@ -46,15 +47,22 @@ public class CustomErrorHandler extends ResponseEntityExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleDuplicateEmailException(DuplicateEmailException e) {
         return new ApiError(HttpStatus.BAD_REQUEST,
-                "Емаил уже есть в бд",
+                "Email уже есть в бд",
                 e.getLocalizedMessage());
     }
 
     //404
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(NoSuchElementException.class)
-    public ApiError handleNoSuchElement(final NoSuchElementException e) {
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ApiError handleEntityNotFoundException(final EntityNotFoundException e) {
         return new ApiError(HttpStatus.NOT_FOUND, "Обьект не найден", e.getLocalizedMessage());
+    }
+
+    //403
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(AccessDeniedException.class)
+    public ApiError handleAccessDeniedException(final AccessDeniedException e) {
+        return new ApiError(HttpStatus.FORBIDDEN, "Отказано в доступе", e.getLocalizedMessage());
     }
 
     //500

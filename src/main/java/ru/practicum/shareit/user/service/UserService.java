@@ -2,6 +2,7 @@ package ru.practicum.shareit.user.service;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.advice.exception.EntityNotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
@@ -18,7 +19,7 @@ public class UserService {
 
     public UserDto find(Long userId) {
         User user = userRepository.read(userId);
-        if (user == null) throw new NoSuchElementException("Пользователь с ID_" + userId + " не найден");
+        if (user == null) throw new EntityNotFoundException("Пользователь", userId);
         return UserMapper.toUserDto(user);
     }
 
@@ -35,7 +36,7 @@ public class UserService {
 
     public UserDto update(UserDto userDto, Long userId) {
         if (userRepository.read(userId) == null) {
-            throw new NoSuchElementException("Пользователь с ID_" + userDto.getId() + " не найден");
+            throw new EntityNotFoundException("Пользователь", userId);
         }
         return UserMapper.toUserDto(userRepository.update(userDto, userId));
     }

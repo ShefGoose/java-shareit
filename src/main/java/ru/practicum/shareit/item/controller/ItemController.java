@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemUserDto;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.validation.Marker;
 
@@ -45,7 +44,7 @@ public class ItemController {
     }
 
     @GetMapping
-    public Collection<ItemUserDto> getAll(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public Collection<ItemDto> getAll(@RequestHeader("X-Sharer-User-Id") Long userId) {
         return itemService.findAll(userId);
     }
 }

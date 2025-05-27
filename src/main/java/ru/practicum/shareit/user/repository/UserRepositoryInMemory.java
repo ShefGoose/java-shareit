@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.exception.DuplicateEmailException;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.*;
@@ -29,7 +30,7 @@ public class UserRepositoryInMemory implements UserRepository {
         if (!emailSet.add(userDto.getEmail())) {
             throw new DuplicateEmailException("Email already exists");
         }
-        User user = new User(getNextId(), userDto.getName(), userDto.getEmail());
+        User user = UserMapper.toUser(userDto, getNextId());
         users.put(user.getId(), user);
         return user;
     }

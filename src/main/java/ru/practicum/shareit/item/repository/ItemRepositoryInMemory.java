@@ -3,8 +3,8 @@ package ru.practicum.shareit.item.repository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -18,8 +18,7 @@ public class ItemRepositoryInMemory implements ItemRepository {
 
     @Override
     public Item create(ItemDto itemDto, Long userId) {
-        Item item = new Item(getNextId(), itemDto.getName(), itemDto.getDescription(),
-                itemDto.getAvailable(), new User(userId), null);
+        Item item = ItemMapper.toItem(itemDto, userId, getNextId());
         items.put(item.getId(), item);
         return item;
     }

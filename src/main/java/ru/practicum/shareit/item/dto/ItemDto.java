@@ -12,7 +12,6 @@ import ru.practicum.shareit.validation.Marker;
 import java.time.LocalDateTime;
 import java.util.Collection;
 
-
 @Data
 @AllArgsConstructor
 public class ItemDto {

@@ -12,18 +12,20 @@ import ru.practicum.shareit.validation.Marker;
 import java.time.LocalDateTime;
 import java.util.Collection;
 
-
 @Data
 @AllArgsConstructor
 public class ItemDto {
     @Null(groups = Marker.OnCreate.class, message = "При добавлении вещи id должен быть null")
     private Long id;
+  
     @NotBlank(groups = Marker.OnCreate.class, message = "Название вещи не долнжо быть пустым")
     private String name;
+  
     @Size(groups = {Marker.OnCreate.class, Marker.OnUpdate.class}, max = 200,
             message = "Длина описания превышает 200 символов")
     @NotNull(groups = Marker.OnCreate.class, message = "Описание фильма не может быть null")
     private String description;
+  
     @NotNull(groups = Marker.OnCreate.class, message = "Доступность вещи не может быть null")
     private Boolean available;
 

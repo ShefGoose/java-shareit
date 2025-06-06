@@ -24,8 +24,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice(basePackages = {"ru.practicum.shareit.user.controller",
+
         "ru.practicum.shareit.item.controller",
         "ru.practicum.shareit.booking.controller"})
+
 public class CustomErrorHandler extends ResponseEntityExceptionHandler {
     //400
     @Override
@@ -40,7 +42,6 @@ public class CustomErrorHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, validationErrorResponse, headers, HttpStatus.BAD_REQUEST, request);
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(ItemUnavailableException.class)
     public ApiError handleItemUnavailableException(final ItemUnavailableException e) {
         return new ApiError(HttpStatus.BAD_REQUEST, "Отказано в бронировании", e.getLocalizedMessage());

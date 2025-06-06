@@ -26,11 +26,13 @@ public class UserService {
 
     public Collection<UserDto> findAll() {
         Collection<User> users = userRepository.findAll();
+      
         return users.stream()
                 .map(UserMapper::toUserDto)
                 .collect(Collectors.toList());
     }
-
+    
+    @Transactional
     public UserDto create(UserDto userDto) {
         try {
             return UserMapper.toUserDto(userRepository.save(UserMapper.toUser(userDto)));
@@ -41,7 +43,8 @@ public class UserService {
             throw e;
         }
     }
-
+  
+    @Transactional
     public UserDto update(UserDto userDto, Long userId) {
         User updateUser = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь", userId));

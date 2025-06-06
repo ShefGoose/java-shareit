@@ -58,18 +58,20 @@ public class ItemService {
                 })
                 .collect(Collectors.toList());
     }
-
+  
+    @Transactional
     public ItemDto create(ItemDto itemDto, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь", userId));
         return ItemMapper.toItemDto(itemRepository.save(ItemMapper.toItem(itemDto, userId)),
                 Collections.emptyList());
     }
-
+  
+    @Transactional
     public ItemDto update(ItemDto itemUpdateDto, Long itemId, Long userId) {
         Item itemUpdate = itemRepository.findById(itemId)
                 .orElseThrow(() -> new EntityNotFoundException("Предмет", itemId));
-
+      
         if (!itemUpdate.getOwner().getId().equals(userId)) {
             throw new AccessDeniedException("Редактировать вещь может только владелец вещи");
         }

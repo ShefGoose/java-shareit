@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import ru.practicum.shareit.advice.exception.AccessDeniedException;
+import ru.practicum.shareit.advice.exception.CommentCreationException;
 import ru.practicum.shareit.advice.exception.EntityNotFoundException;
+import ru.practicum.shareit.advice.exception.ItemUnavailableException;
 import ru.practicum.shareit.advice.response.ApiError;
 import ru.practicum.shareit.advice.response.ValidationErrorResponse;
 import ru.practicum.shareit.advice.response.Violation;
@@ -22,7 +24,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice(basePackages = {"ru.practicum.shareit.user.controller",
-        "ru.practicum.shareit.item.controller"})
+        "ru.practicum.shareit.item.controller",
+        "ru.practicum.shareit.booking.controller"})
 public class CustomErrorHandler extends ResponseEntityExceptionHandler {
     //400
     @Override
@@ -35,6 +38,19 @@ public class CustomErrorHandler extends ResponseEntityExceptionHandler {
                 .collect(Collectors.toList());
         ValidationErrorResponse validationErrorResponse = new ValidationErrorResponse(violations);
         return handleExceptionInternal(ex, validationErrorResponse, headers, HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(ItemUnavailableException.class)
+    public ApiError handleItemUnavailableException(final ItemUnavailableException e) {
+        return new ApiError(HttpStatus.BAD_REQUEST, "Отказано в бронировании", e.getLocalizedMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(CommentCreationException.class)
+    public ApiError handleCommentCreationException(final CommentCreationException e) {
+        return new ApiError(HttpStatus.BAD_REQUEST, "Ошибка при добавлении комментария",
+                e.getLocalizedMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

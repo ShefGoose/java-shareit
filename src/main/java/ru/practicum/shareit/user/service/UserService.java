@@ -1,8 +1,10 @@
 package ru.practicum.shareit.user.service;
 
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.advice.exception.EntityNotFoundException;
+import ru.practicum.shareit.exception.DuplicateEmailException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
@@ -17,30 +19,46 @@ public class UserService {
     private final UserRepository userRepository;
 
     public UserDto find(Long userId) {
-        User user = userRepository.read(userId);
-        if (user == null) throw new EntityNotFoundException("Пользователь", userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь", userId));
         return UserMapper.toUserDto(user);
     }
 
     public Collection<UserDto> findAll() {
-        Collection<User> users = userRepository.readAll();
+        Collection<User> users = userRepository.findAll();
         return users.stream()
                 .map(UserMapper::toUserDto)
                 .collect(Collectors.toList());
     }
 
     public UserDto create(UserDto userDto) {
-        return UserMapper.toUserDto(userRepository.create(userDto));
+        try {
+            return UserMapper.toUserDto(userRepository.save(UserMapper.toUser(userDto)));
+        } catch (DataIntegrityViolationException e) {
+            if (e.getRootCause() != null && e.getRootCause().getMessage().contains("duplicate key")) {
+                throw new DuplicateEmailException("Email уже используется");
+            }
+            throw e;
+        }
     }
 
     public UserDto update(UserDto userDto, Long userId) {
-        if (userRepository.read(userId) == null) {
-            throw new EntityNotFoundException("Пользователь", userId);
+        User updateUser = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь", userId));
+        if (userDto.getName() != null) updateUser.setName(userDto.getName());
+        if (userDto.getEmail() != null) updateUser.setEmail(userDto.getEmail());
+
+        try {
+            return UserMapper.toUserDto(userRepository.save(updateUser));
+        } catch (DataIntegrityViolationException e) {
+            if (e.getRootCause() != null && e.getRootCause().getMessage().contains("duplicate key")) {
+                throw new DuplicateEmailException("Email уже используется");
+            }
+            throw e;
         }
-        return UserMapper.toUserDto(userRepository.update(userDto, userId));
     }
 
     public void delete(Long userId) {
-        userRepository.delete(userId);
+        userRepository.deleteById(userId);
     }
 }

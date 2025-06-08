@@ -21,6 +21,7 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -115,7 +116,8 @@ public class ItemService {
 
         if (!itemBookings.isEmpty()) {
             endBooking = itemBookings.stream()
-                    .filter(booking -> booking.getEndTime().isBefore(LocalDateTime.now()))
+                    .filter(booking -> booking.getEndTime().isBefore(LocalDateTime.now()) &&
+                            Duration.between(booking.getStart(), booking.getEndTime()).toSeconds() > 1)
                     .max(comparing(Booking::getEndTime))
                     .map(booking -> BookingMapper.toBookingDto(booking, booking.getBooker().getId()))
                     .orElse(null);

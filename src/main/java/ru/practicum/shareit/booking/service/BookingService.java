@@ -37,12 +37,24 @@ public class BookingService {
             throw new ItemUnavailableException(String.format("Предмет с ID_%d недоступен для бронирования",
                     item.getId()));
         }
+
+        LocalDateTime startBooking = bookingCreateDto.getStart();
+        LocalDateTime endBooking = bookingCreateDto.getEnd();
+
+        if (bookingRepository.hasOverlappingBooking(bookingCreateDto.getItemId(),
+                BookingStatus.APPROVED,
+                startBooking,
+                endBooking)) {
+            throw new ItemUnavailableException(String.format("Предмет с ID_%d недоступен для бронирования",
+                    item.getId()));
+        }
+
         return BookingMapper.toBookingDto(bookingRepository.save(BookingMapper.toBooking(bookingCreateDto, userId,
                 item.getName())), userId);
     }
 
     public BookingDto update(Long userId, Long bookingId, boolean approve) {
-        Booking bookingUpdate = bookingRepository.findByIdWithItemAndOwner(bookingId).orElseThrow(() ->
+        Booking bookingUpdate = bookingRepository.findBookingWithGraphById(bookingId).orElseThrow(() ->
                 new EntityNotFoundException("Бронирование", bookingId));
 
         if (!bookingUpdate.getItem().getOwner().getId().equals(userId)) {
@@ -55,7 +67,7 @@ public class BookingService {
     }
 
     public BookingDto find(Long userId, Long bookingId) {
-        Booking booking = bookingRepository.findByIdWithItemAndOwner(bookingId).orElseThrow(() ->
+        Booking booking = bookingRepository.findBookingWithGraphById(bookingId).orElseThrow(() ->
                 new EntityNotFoundException("Бронирование", bookingId));
 
         if (!(booking.getBooker().getId().equals(userId) || booking.getItem().getOwner().getId().equals(userId))) {
@@ -71,18 +83,19 @@ public class BookingService {
         LocalDateTime now = LocalDateTime.now();
 
         switch (state) {
-            case ALL -> bookings = bookingRepository.findAllByUserId(userId);
-            case CURRENT -> bookings = bookingRepository.findAllByUserIdAndStatusAndStartBeforeAndEndAfter(userId,
+            case ALL -> bookings = bookingRepository.findAllByBooker_Id(userId);
+            case CURRENT ->
+                    bookings = bookingRepository.findAllByBooker_IdAndStatusAndStartBeforeAndEndTimeAfter(userId,
+                            BookingStatus.APPROVED,
+                            now, now);
+            case PAST -> bookings = bookingRepository.findAllByBooker_IdAndStatusAndEndTimeBefore(userId,
                     BookingStatus.APPROVED,
                     now);
-            case PAST -> bookings = bookingRepository.findAllByUserIdAndStatusAndEndBefore(userId,
+            case FUTURE -> bookings = bookingRepository.findAllByBooker_IdAndStatusAndStartAfter(userId,
                     BookingStatus.APPROVED,
                     now);
-            case FUTURE -> bookings = bookingRepository.findAllByUserIdAndStatusAndStartAfter(userId,
-                    BookingStatus.APPROVED,
-                    now);
-            case WAITING -> bookings = bookingRepository.findAllByUserIdAndStatus(userId, BookingStatus.WAITING);
-            case REJECTED -> bookings = bookingRepository.findAllByUserIdAndStatus(userId, BookingStatus.REJECTED);
+            case WAITING -> bookings = bookingRepository.findAllByBooker_IdAndStatus(userId, BookingStatus.WAITING);
+            case REJECTED -> bookings = bookingRepository.findAllByBooker_IdAndStatus(userId, BookingStatus.REJECTED);
             default -> bookings = Collections.emptyList();
         }
 
@@ -100,18 +113,20 @@ public class BookingService {
         LocalDateTime now = LocalDateTime.now();
 
         switch (state) {
-            case ALL -> bookings = bookingRepository.findAllByOwnerId(userId);
-            case CURRENT -> bookings = bookingRepository.findAllByOwnerIdAndStatusAndStartBeforeAndEndAfter(userId,
+            case ALL -> bookings = bookingRepository.findAllByItem_Owner_Id(userId);
+            case CURRENT ->
+                    bookings = bookingRepository.findAllByItem_Owner_IdAndStatusAndStartBeforeAndEndTimeAfter(userId,
+                            BookingStatus.APPROVED,
+                            now, now);
+            case PAST -> bookings = bookingRepository.findAllByItem_Owner_IdAndStatusAndEndTimeBefore(userId,
                     BookingStatus.APPROVED,
                     now);
-            case PAST -> bookings = bookingRepository.findAllByOwnerIdAndStatusAndEndBefore(userId,
+            case FUTURE -> bookings = bookingRepository.findAllByItem_Owner_IdAndStatusAndStartAfter(userId,
                     BookingStatus.APPROVED,
                     now);
-            case FUTURE -> bookings = bookingRepository.findAllByOwnerIdAndStatusAndStartAfter(userId,
-                    BookingStatus.APPROVED,
-                    now);
-            case WAITING -> bookings = bookingRepository.findAllByOwnerIdAndStatus(userId, BookingStatus.WAITING);
-            case REJECTED -> bookings = bookingRepository.findAllByOwnerIdAndStatus(userId, BookingStatus.REJECTED);
+            case WAITING -> bookings = bookingRepository.findAllByItem_Owner_IdAndStatus(userId, BookingStatus.WAITING);
+            case REJECTED ->
+                    bookings = bookingRepository.findAllByItem_Owner_IdAndStatus(userId, BookingStatus.REJECTED);
             default -> bookings = Collections.emptyList();
         }
 

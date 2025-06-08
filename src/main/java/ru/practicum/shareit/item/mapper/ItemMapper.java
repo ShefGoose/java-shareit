@@ -1,32 +1,29 @@
 package ru.practicum.shareit.item.mapper;
 
+import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemOwnerDto;
+import ru.practicum.shareit.item.dto.ItemAllFieldsDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 
 public class ItemMapper {
-    public static ItemDto toItemDto(Item item, Collection<CommentDto> comments) {
+    public static ItemDto toItemDto(Item item) {
         return new ItemDto(
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
-                item.getAvailable(),
-                null,
-                null,
-                comments
+                item.getAvailable()
         );
     }
 
-    public static ItemOwnerDto toItemOwnerDto(Item item,
-                                              LocalDateTime endBooking,
-                                              LocalDateTime startNextBooking,
-                                              Collection<CommentDto> comments) {
-        return new ItemOwnerDto(
+    public static ItemAllFieldsDto toItemAllFieldsDto(Item item,
+                                                  BookingDto endBooking,
+                                                  BookingDto startNextBooking,
+                                                  Collection<CommentDto> comments) {
+        return new ItemAllFieldsDto(
                 item.getId(),
                 item.getName(),
                 item.getDescription(),

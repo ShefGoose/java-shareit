@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking.repository;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,153 +15,69 @@ import java.util.Optional;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
+    @EntityGraph(attributePaths = {"item", "item.owner"})
+    Optional<Booking> findBookingWithGraphById(Long bookingId);
+
+    @EntityGraph(attributePaths = {"item", "item.owner"})
+    Collection<Booking> findAllByBooker_Id(Long bookerId);
+
+    @EntityGraph(attributePaths = {"item", "item.owner"})
+    Collection<Booking> findAllByItem_Id(Long itemId);
+
+    @EntityGraph(attributePaths = {"item", "item.owner"})
+    Collection<Booking> findAllByBooker_IdAndStatusAndStartBeforeAndEndTimeAfter(Long bookerId,
+                                                                                 BookingStatus bookingStatus,
+                                                                                 LocalDateTime startAfter,
+                                                                                 LocalDateTime endBefore);
+
+    @EntityGraph(attributePaths = {"item", "item.owner"})
+    Collection<Booking> findAllByBooker_IdAndStatusAndEndTimeBefore(Long bookerId, BookingStatus bookingStatus,
+                                                                    LocalDateTime endBefore);
+
+    @EntityGraph(attributePaths = {"item", "item.owner"})
+    Collection<Booking> findAllByBooker_IdAndStatusAndStartAfter(@Param("id") Long bookerId,
+                                                                 @Param("status") BookingStatus bookingStatus,
+                                                                 @Param("today") LocalDateTime startAfter);
+
+    @EntityGraph(attributePaths = {"item", "item.owner"})
+    Collection<Booking> findAllByBooker_IdAndStatus(Long bookerId, BookingStatus bookingStatus);
+
+    @EntityGraph(attributePaths = {"item", "item.owner"})
+    Collection<Booking> findAllByItem_Owner_Id(Long ownerId);
+
+    @EntityGraph(attributePaths = {"item", "item.owner"})
+    Collection<Booking> findAllByItem_Owner_IdAndStatusAndStartBeforeAndEndTimeAfter(Long ownerId,
+                                                                                     BookingStatus bookingStatus,
+                                                                                     LocalDateTime startBefore,
+                                                                                     LocalDateTime endAfter);
+
+    @EntityGraph(attributePaths = {"item", "item.owner"})
+    Collection<Booking> findAllByItem_Owner_IdAndStatusAndEndTimeBefore(Long ownerId, BookingStatus bookingStatus,
+                                                                        LocalDateTime endBefore);
+
+    @EntityGraph(attributePaths = {"item", "item.owner"})
+    Collection<Booking> findAllByItem_Owner_IdAndStatusAndStartAfter(Long ownerId, BookingStatus bookingStatus,
+                                                                     LocalDateTime startAfter);
+
+    @EntityGraph(attributePaths = {"item", "item.owner"})
+    Collection<Booking> findAllByItem_Owner_IdAndStatus(Long ownerId, BookingStatus bookingStatus);
+
+    @EntityGraph(attributePaths = {"item", "item.owner"})
+    Optional<Booking> findByBooker_IdAndItem_IdAndStatusAndEndTimeBefore(Long bookerId, Long itemId, BookingStatus status,
+                                                                     LocalDateTime endBefore);
+
     @Query("""
-            SELECT b
+            SELECT COUNT(b) > 0
             FROM Booking b
-            join fetch b.item i
-            join fetch i.owner o
-            WHERE b.id = :id
+            WHERE b.item.id = :id
+            AND b.status = :status
+            AND b.endTime >= :start
+            AND b.start <= :end
             """)
-    Optional<Booking> findByIdWithItemAndOwner(@Param("id") Long bookingId);
-
-    @Query("""
-            SELECT b
-            FROM Booking b
-            join fetch b.item i
-            join fetch i.owner o
-            WHERE b.booker.id = :id
-            """)
-    Collection<Booking> findAllByUserId(@Param("id") Long userId);
-
-    @Query("""
-                        SELECT b
-                        FROM Booking b
-                        join fetch b.item i
-                        join fetch i.owner o
-                        WHERE b.booker.id = :id
-                        AND b.status = :status
-                        AND b.start < :today
-                        AND b.endTime > :today
-            """)
-    Collection<Booking> findAllByUserIdAndStatusAndStartBeforeAndEndAfter(@Param("id") Long userId,
-                                                                          @Param("status") BookingStatus bookingStatus,
-                                                                          @Param("today") LocalDateTime today);
-
-
-    @Query("""
-                        SELECT b
-                        FROM Booking b
-                        join fetch b.item i
-                        join fetch i.owner o
-                        WHERE b.booker.id = :id
-                        AND b.status = :status
-                        AND b.endTime < :today
-            """)
-    Collection<Booking> findAllByUserIdAndStatusAndEndBefore(@Param("id") Long userId,
-                                                             @Param("status") BookingStatus bookingStatus,
-                                                             @Param("today") LocalDateTime today);
-
-    @Query("""
-                        SELECT b
-                        FROM Booking b
-                        join fetch b.item i
-                        join fetch i.owner o
-                        WHERE b.booker.id = :id
-                        AND b.status = :status
-                        AND b.start > :today
-            """)
-    Collection<Booking> findAllByUserIdAndStatusAndStartAfter(@Param("id") Long userId,
-                                                              @Param("status") BookingStatus bookingStatus,
-                                                              @Param("today") LocalDateTime today);
-
-
-    @Query("""
-                        SELECT b
-                        FROM Booking b
-                        join fetch b.item i
-                        join fetch i.owner o
-                        WHERE b.booker.id = :id
-                        AND b.status = :status
-            """)
-    Collection<Booking> findAllByUserIdAndStatus(@Param("id") Long userId,
-                                                 @Param("status") BookingStatus bookingStatus);
-
-    @Query("""
-            SELECT b
-            FROM Booking b
-            join fetch b.item i
-            join fetch i.owner o
-            WHERE o.id = :id
-            """)
-    Collection<Booking> findAllByOwnerId(@Param("id") Long userId);
-
-    @Query("""
-                        SELECT b
-                        FROM Booking b
-                        join fetch b.item i
-                        join fetch i.owner o
-                        WHERE o.id = :id
-                        AND b.status = :status
-                        AND b.start < :today
-                        AND b.endTime > :today
-            """)
-    Collection<Booking> findAllByOwnerIdAndStatusAndStartBeforeAndEndAfter(@Param("id") Long userId,
-                                                                           @Param("status") BookingStatus bookingStatus,
-                                                                           @Param("today") LocalDateTime today);
-
-
-    @Query("""
-                        SELECT b
-                        FROM Booking b
-                        join fetch b.item i
-                        join fetch i.owner o
-                        WHERE o.id = :id
-                        AND b.status = :status
-                        AND b.endTime < :today
-            """)
-    Collection<Booking> findAllByOwnerIdAndStatusAndEndBefore(@Param("id") Long userId,
-                                                              @Param("status") BookingStatus bookingStatus,
-                                                              @Param("today") LocalDateTime today);
-
-    @Query("""
-                        SELECT b
-                        FROM Booking b
-                        join fetch b.item i
-                        join fetch i.owner o
-                        WHERE o.id = :id
-                        AND b.status = :status
-                        AND b.start > :today
-            """)
-    Collection<Booking> findAllByOwnerIdAndStatusAndStartAfter(@Param("id") Long userId,
-                                                               @Param("status") BookingStatus bookingStatus,
-                                                               @Param("today") LocalDateTime today);
-
-
-    @Query("""
-                        SELECT b
-                        FROM Booking b
-                        join fetch b.item i
-                        join fetch i.owner o
-                        WHERE o.id = :id
-                        AND b.status = :status
-            """)
-    Collection<Booking> findAllByOwnerIdAndStatus(@Param("id") Long userId,
-                                                  @Param("status") BookingStatus bookingStatus);
-
-    @Query("""
-                        SELECT b
-                        FROM Booking b
-                        join fetch b.item i
-                        join fetch i.owner o
-                        WHERE b.booker.id = :id
-                        AND i.id = :itemId
-                        AND b.status = :status
-                        AND b.endTime < :today
-            """)
-    Optional<Booking> findByBookerIdAndItemIdAndStatusAndEndBefore(@Param("id") Long userId,
-                                                                   @Param("itemId") Long itemId,
-                                                                   @Param("status") BookingStatus status,
-                                                                   @Param("today") LocalDateTime today);
+    boolean hasOverlappingBooking(@Param("id") Long itemId,
+                                  @Param("status") BookingStatus bookingStatus,
+                                  @Param("start") LocalDateTime start,
+                                  @Param("end") LocalDateTime end);
 }
 
 

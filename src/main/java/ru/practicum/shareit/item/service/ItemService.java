@@ -6,11 +6,13 @@ import ru.practicum.shareit.advice.enums.BookingStatus;
 import ru.practicum.shareit.advice.exception.AccessDeniedException;
 import ru.practicum.shareit.advice.exception.CommentCreationException;
 import ru.practicum.shareit.advice.exception.EntityNotFoundException;
+import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemOwnerDto;
+import ru.practicum.shareit.item.dto.ItemAllFieldsDto;
 import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
@@ -23,6 +25,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Comparator.comparing;
+
 @Service
 @AllArgsConstructor
 public class ItemService {
@@ -31,21 +35,17 @@ public class ItemService {
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
 
-    public ItemDto find(Long itemId) {
+    public ItemAllFieldsDto find(Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new EntityNotFoundException("Предмет", itemId));
+        Collection<Booking> bookings = bookingRepository.findAllByItem_Id(itemId);
 
-        Collection<CommentDto> comments = commentRepository.findAllByItemId(itemId)
-                .stream()
-                .map(CommentMapper::toCommentDto)
-                .toList();
-
-        return ItemMapper.toItemDto(item, comments);
+        return createItemAllFieldsDtoWithBookings(item, bookings);
     }
 
-    public Collection<ItemOwnerDto> findAll(Long userId) {
+    public Collection<ItemAllFieldsDto> findAll(Long userId) {
         Collection<Item> items = itemRepository.findByOwnerId(userId);
-        Collection<Booking> bookings = bookingRepository.findAllByOwnerId(userId);
+        Collection<Booking> bookings = bookingRepository.findAllByItem_Owner_Id(userId);
 
         Map<Long, List<Booking>> bookingsByItem = bookings.stream()
                 .collect(Collectors.groupingBy(booking -> booking.getItem().getId()));
@@ -53,7 +53,7 @@ public class ItemService {
         return items.stream()
                 .map(item -> {
                     List<Booking> itemBookings = bookingsByItem.getOrDefault(item.getId(), Collections.emptyList());
-                    return createItemOwnerDtoWithBookings(item, itemBookings);
+                    return createItemAllFieldsDtoWithBookings(item, itemBookings);
                 })
                 .collect(Collectors.toList());
     }
@@ -61,8 +61,7 @@ public class ItemService {
     public ItemDto create(ItemDto itemDto, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь", userId));
-        return ItemMapper.toItemDto(itemRepository.save(ItemMapper.toItem(itemDto, userId)),
-                Collections.emptyList());
+        return ItemMapper.toItemDto(itemRepository.save(ItemMapper.toItem(itemDto, userId)));
     }
 
     public ItemDto update(ItemDto itemUpdateDto, Long itemId, Long userId) {
@@ -77,7 +76,7 @@ public class ItemService {
         if (itemUpdateDto.getDescription() != null) itemUpdate.setDescription(itemUpdateDto.getDescription());
         if (itemUpdateDto.getAvailable() != null) itemUpdate.setAvailable(itemUpdateDto.getAvailable());
 
-        return ItemMapper.toItemDto(itemRepository.save(itemUpdate), Collections.emptyList());
+        return ItemMapper.toItemDto(itemRepository.save(itemUpdate));
     }
 
     public Collection<ItemDto> search(String text) {
@@ -88,7 +87,7 @@ public class ItemService {
         Collection<Item> items = itemRepository.search(text);
 
         return items.stream()
-                .map(item -> ItemMapper.toItemDto(item, Collections.emptyList()))
+                .map(ItemMapper::toItemDto)
                 .toList();
     }
 
@@ -96,7 +95,7 @@ public class ItemService {
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь", userId));
 
-        Booking booking = bookingRepository.findByBookerIdAndItemIdAndStatusAndEndBefore(userId, itemId,
+        Booking booking = bookingRepository.findByBooker_IdAndItem_IdAndStatusAndEndTimeBefore(userId, itemId,
                         BookingStatus.APPROVED,
                         LocalDateTime.now())
                 .orElseThrow(() -> new CommentCreationException("Оставить комментарий может " +
@@ -105,35 +104,30 @@ public class ItemService {
         return CommentMapper.toCommentDto(commentRepository.save(CommentMapper.toComment(commentDto, author, itemId)));
     }
 
-    private ItemOwnerDto createItemOwnerDtoWithBookings(Item item, List<Booking> itemBookings) {
+    private ItemAllFieldsDto createItemAllFieldsDtoWithBookings(Item item, Collection<Booking> itemBookings) {
         Collection<CommentDto> comments = commentRepository.findAllByItemId(item.getId())
                 .stream()
                 .map(CommentMapper::toCommentDto)
                 .toList();
 
-        LocalDateTime endBooking = null;
-        LocalDateTime startNextBooking = null;
+        BookingDto endBooking = null;
+        BookingDto startNextBooking = null;
 
         if (!itemBookings.isEmpty()) {
-            List<Booking> sortedBookings = itemBookings.stream()
-                    .sorted(Comparator.comparing(Booking::getStart))
-                    .toList();
-
-            endBooking = sortedBookings.stream()
-                    .map(Booking::getEndTime)
-                    .filter(endTime -> endTime.isBefore(LocalDateTime.now()))
-                    .max(LocalDateTime::compareTo)
+            endBooking = itemBookings.stream()
+                    .filter(booking -> booking.getEndTime().isBefore(LocalDateTime.now()))
+                    .max(comparing(Booking::getEndTime))
+                    .map(booking -> BookingMapper.toBookingDto(booking, booking.getBooker().getId()))
                     .orElse(null);
 
 
-            startNextBooking = sortedBookings.stream()
-                    .map(Booking::getStart)
-                    .filter(start -> start.isAfter(LocalDateTime.now()) ||
-                            start.isEqual(LocalDateTime.now()))
-                    .min(LocalDateTime::compareTo)
+            startNextBooking = itemBookings.stream()
+                    .filter(booking -> booking.getStart().isAfter(LocalDateTime.now()))
+                    .min(comparing(Booking::getStart))
+                    .map(booking -> BookingMapper.toBookingDto(booking, booking.getBooker().getId()))
                     .orElse(null);
         }
 
-        return ItemMapper.toItemOwnerDto(item, endBooking, startNextBooking, comments);
+        return ItemMapper.toItemAllFieldsDto(item, endBooking, startNextBooking, comments);
     }
 }

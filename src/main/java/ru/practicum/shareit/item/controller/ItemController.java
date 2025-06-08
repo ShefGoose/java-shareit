@@ -6,7 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemOwnerDto;
+import ru.practicum.shareit.item.dto.ItemAllFieldsDto;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.validation.Marker;
 
@@ -34,7 +34,7 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto get(@PathVariable Long itemId,
+    public ItemAllFieldsDto get(@PathVariable Long itemId,
                        @RequestHeader("X-Sharer-User-Id") Long userId) {
         return itemService.find(itemId);
     }
@@ -46,7 +46,7 @@ public class ItemController {
     }
 
     @GetMapping
-    public Collection<ItemOwnerDto> getAll(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public Collection<ItemAllFieldsDto> getAll(@RequestHeader("X-Sharer-User-Id") Long userId) {
         return itemService.findAll(userId);
     }
 

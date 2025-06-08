@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
@@ -8,10 +7,6 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import ru.practicum.shareit.validation.Marker;
-
-import java.time.LocalDateTime;
-import java.util.Collection;
-
 
 @Data
 @AllArgsConstructor
@@ -26,12 +21,4 @@ public class ItemDto {
     private String description;
     @NotNull(groups = Marker.OnCreate.class, message = "Доступность вещи не может быть null")
     private Boolean available;
-
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime lastBooking;
-
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime nextBooking;
-
-    private Collection<CommentDto> comments;
 }

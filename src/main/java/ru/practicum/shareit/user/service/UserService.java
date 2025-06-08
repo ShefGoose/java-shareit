@@ -1,7 +1,6 @@
 package ru.practicum.shareit.user.service;
 
 import lombok.AllArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.advice.exception.EntityNotFoundException;
 import ru.practicum.shareit.exception.DuplicateEmailException;
@@ -32,30 +31,24 @@ public class UserService {
     }
 
     public UserDto create(UserDto userDto) {
-        try {
-            return UserMapper.toUserDto(userRepository.save(UserMapper.toUser(userDto)));
-        } catch (DataIntegrityViolationException e) {
-            if (e.getRootCause() != null && e.getRootCause().getMessage().contains("duplicate key")) {
-                throw new DuplicateEmailException("Email уже используется");
-            }
-            throw e;
+        if (userRepository.existsByEmail(userDto.getEmail())) {
+            throw new DuplicateEmailException("Email уже используется");
         }
+        return UserMapper.toUserDto(userRepository.save(UserMapper.toUser(userDto)));
     }
 
     public UserDto update(UserDto userDto, Long userId) {
         User updateUser = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь", userId));
+
+        if (userRepository.existsByEmail(userDto.getEmail())) {
+            throw new DuplicateEmailException("Email уже используется");
+        }
+
         if (userDto.getName() != null) updateUser.setName(userDto.getName());
         if (userDto.getEmail() != null) updateUser.setEmail(userDto.getEmail());
 
-        try {
-            return UserMapper.toUserDto(userRepository.save(updateUser));
-        } catch (DataIntegrityViolationException e) {
-            if (e.getRootCause() != null && e.getRootCause().getMessage().contains("duplicate key")) {
-                throw new DuplicateEmailException("Email уже используется");
-            }
-            throw e;
-        }
+        return UserMapper.toUserDto(userRepository.save(updateUser));
     }
 
     public void delete(Long userId) {

@@ -40,7 +40,7 @@ public class ItemRequestService {
         PageRequest pageRequest = Pagination.makePageRequest(from, size);
         Page<ItemRequest> userRequests;
 
-        userRequests = itemRequestRepository.findAllByRequestor_Id(userId,
+        userRequests = itemRequestRepository.findAllByRequestor_IdOrderByCreatedDesc(userId,
                 Objects.requireNonNullElseGet(pageRequest, () -> PageRequest.of(0, Integer.MAX_VALUE)));
         Collection<Long> requestsIds = userRequests.stream()
                 .map(ItemRequest::getId)
@@ -65,7 +65,7 @@ public class ItemRequestService {
 
         PageRequest pageRequest = Pagination.makePageRequest(from, size);
 
-        return itemRequestRepository.findAllByRequestor_IdNot(userId,
+        return itemRequestRepository.findAllByRequestor_IdNotOrderByCreatedDesc(userId,
                         Objects.requireNonNullElseGet(pageRequest, () ->
                                 PageRequest.of(0, Integer.MAX_VALUE))).stream()
                 .map(ItemRequestMapper::toItemRequestDto)

@@ -1,33 +1,27 @@
 package ru.practicum.shareit.item.controller;
 
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemAllFieldsDto;
 import ru.practicum.shareit.item.service.ItemService;
-import ru.practicum.shareit.validation.Marker;
 
 import java.util.Collection;
 
 @RestController
-@Validated
 @AllArgsConstructor
 @RequestMapping("/items")
 public class ItemController {
     private final ItemService itemService;
 
     @PostMapping
-    @Validated(Marker.OnCreate.class)
-    public ItemDto create(@Valid @RequestBody ItemDto itemDto, @RequestHeader("X-Sharer-User-Id") Long userId) {
+    public ItemDto create(@RequestBody ItemDto itemDto, @RequestHeader("X-Sharer-User-Id") Long userId) {
         return itemService.create(itemDto, userId);
     }
 
     @PatchMapping("/{itemId}")
-    @Validated(Marker.OnUpdate.class)
-    public ItemDto update(@Valid @RequestBody ItemDto itemDto,
+    public ItemDto update(@RequestBody ItemDto itemDto,
                           @RequestHeader("X-Sharer-User-Id") Long userId,
                           @PathVariable Long itemId) {
         return itemService.update(itemDto, itemId, userId);
@@ -54,10 +48,9 @@ public class ItemController {
         return itemService.findAll(userId, from, size);
     }
 
-    @Validated(Marker.OnCreate.class)
     @PostMapping("{itemId}/comment")
     public CommentDto create(@PathVariable Long itemId,
-                             @Valid @RequestBody CommentDto commentDto,
+                             @RequestBody CommentDto commentDto,
                              @RequestHeader("X-Sharer-User-Id") Long userId) {
         return itemService.createComment(commentDto, itemId, userId);
     }

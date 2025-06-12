@@ -121,7 +121,7 @@ public class ItemRequestServiceUnitTest {
     @Test
     void testFindAllUserRequests_Success() {
         when(userRepository.findById(userDto.getId())).thenReturn(Optional.of(user));
-        when(itemRequestRepository.findAllByRequestor_Id(
+        when(itemRequestRepository.findAllByRequestor_IdOrderByCreatedDesc(
                 eq(userDto.getId()), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(singletonList(itemRequest)));
         Item i = Item.builder()
@@ -150,7 +150,7 @@ public class ItemRequestServiceUnitTest {
         assertEquals("Saw", dto.getItems().iterator().next().getName());
 
         verify(itemRequestRepository)
-                .findAllByRequestor_Id(eq(userDto.getId()), any(PageRequest.class));
+                .findAllByRequestor_IdOrderByCreatedDesc(eq(userDto.getId()), any(PageRequest.class));
         verify(itemRepository)
                 .findAllByRequest_IdIn(anyCollection());
     }
@@ -165,7 +165,7 @@ public class ItemRequestServiceUnitTest {
     @Test
     void testFindAllOtherUsers_Success() {
         when(userRepository.findById(userDto.getId())).thenReturn(Optional.of(user));
-        when(itemRequestRepository.findAllByRequestor_IdNot(
+        when(itemRequestRepository.findAllByRequestor_IdNotOrderByCreatedDesc(
                 eq(userDto.getId()), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(singletonList(itemRequest)));
 
@@ -178,7 +178,7 @@ public class ItemRequestServiceUnitTest {
     @Test
     void testFindAllOtherUsers_Empty() {
         when(userRepository.findById(userDto.getId())).thenReturn(Optional.of(user));
-        when(itemRequestRepository.findAllByRequestor_IdNot(
+        when(itemRequestRepository.findAllByRequestor_IdNotOrderByCreatedDesc(
                 eq(userDto.getId()), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
@@ -187,5 +187,4 @@ public class ItemRequestServiceUnitTest {
 
         assertTrue(others.isEmpty());
     }
-
 }
